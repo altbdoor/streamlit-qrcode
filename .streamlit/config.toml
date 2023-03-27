@@ -1,8 +1,2 @@
-# https://docs.streamlit.io/library/advanced-features/configuration
-
-[server]
-port = 8000
-headless = true
-
 [browser]
 gatherUsageStats = false
