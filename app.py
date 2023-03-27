@@ -8,6 +8,11 @@ st.title(
     QRCode generated with [segno](https://pypi.org/project/segno/)
     """
 )
+st.set_page_config(
+    menu_items={
+        "GitHub": "https://github.com/altbdoor/streamlit-qrcode",
+    }
+)
 
 # st.write("""
 # <style>
