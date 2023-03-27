@@ -10,7 +10,7 @@ st.title(
 )
 st.set_page_config(
     menu_items={
-        "GitHub": "https://github.com/altbdoor/streamlit-qrcode",
+        "About": "https://github.com/altbdoor/streamlit-qrcode",
     }
 )
 
