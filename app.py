@@ -25,7 +25,14 @@ output_container.markdown("---")
 
 
 @st.cache_data
-def convert_qr(input_str: str, output_format: str, scale: int):
+def convert_qr(
+    input_str: str,
+    output_format: str,
+    scale: int,
+    border: int,
+    dark_color: str,
+    light_color: str,
+):
     qrcode = segno.make_qr(input_str)
 
     if output_format == "Text":
@@ -64,35 +71,53 @@ def convert_qr(input_str: str, output_format: str, scale: int):
 
     elif output_format == "PNG":
         image = io.BytesIO()
-        qrcode.save(image, kind="png", border=0, scale=scale)
+        qrcode.save(
+            image,
+            kind="png",
+            border=border,
+            scale=scale,
+            dark=dark_color,
+            light=light_color,
+        )
         return image
 
     elif output_format == "SVG":
-        return qrcode.svg_inline(border=0, scale=scale, light="#fff")
+        return qrcode.svg_inline(
+            border=border, scale=scale, dark=dark_color, light=light_color
+        )
 
 
 def handle_convert_qr():
     input_str: str = st.session_state.input
     output_format: str = st.session_state.format
-    scale: int = st.session_state.scale
+    scale: int = st.session_state.get("scale", 2)
+    border: int = st.session_state.get("border", 4)
+    dark_color: str = st.session_state.get("dark_color", "#000000")
+    light_color: str = st.session_state.get("light_color", "#ffffff")
 
     with output_container:
         if not input_str:
             st.info("Please write some text to encode into QR")
             return
 
-        output_data = convert_qr(input_str, output_format, scale)
+        output_data = convert_qr(
+            input_str, output_format, scale, border, dark_color, light_color
+        )
         if output_format == "Text":
             st.code(output_data, language=None)
 
         elif output_format == "PNG":
             st.image(output_data)
-            st.download_button("Download PNG", output_data, "qr.png")
+            st.download_button(
+                "Download PNG", output_data, "qr.png", key="download_png"
+            )
 
         elif output_format == "SVG":
             st.image(output_data)
             st.code(output_data, language="svg")
-            st.download_button("Download SVG", output_data, "qr.svg")
+            st.download_button(
+                "Download SVG", output_data, "qr.svg", key="download_svg"
+            )
 
 
 with form_container:
@@ -103,15 +128,8 @@ with form_container:
         on_change=handle_convert_qr,
         max_chars=500,
     )
-    st.slider(
-        "Scale (does not work with text output)",
-        min_value=1,
-        max_value=100,
-        value=4,
-        key="scale",
-        on_change=handle_convert_qr,
-    )
-    st.radio(
+
+    input_format = st.radio(
         "Render output",
         options=(
             "PNG",
@@ -122,4 +140,37 @@ with form_container:
         index=0,
         on_change=handle_convert_qr,
     )
-    st.button("Render", on_click=handle_convert_qr, use_container_width=True)
+
+    if input_format != "Text":
+        st.slider(
+            "Scale",
+            min_value=1,
+            max_value=100,
+            value=4,
+            key="scale",
+            on_change=handle_convert_qr,
+        )
+
+        st.slider(
+            "Border",
+            min_value=0,
+            max_value=10,
+            value=4,
+            key="border",
+            on_change=handle_convert_qr,
+        )
+
+        col1, col2 = st.columns(2)
+        col1.color_picker(
+            "Dark color", value="#000000", key="dark_color", on_change=handle_convert_qr
+        )
+        col2.color_picker(
+            "Light color",
+            value="#ffffff",
+            key="light_color",
+            on_change=handle_convert_qr,
+        )
+
+    st.button(
+        "Render", on_click=handle_convert_qr, use_container_width=True, key="render"
+    )
