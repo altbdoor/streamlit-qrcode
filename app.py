@@ -3,15 +3,15 @@ import segno
 import io
 
 
-st.title(
-    """
-    QRCode generated with [segno](https://pypi.org/project/segno/)
-    """
-)
 st.set_page_config(
     menu_items={
         "About": "https://github.com/altbdoor/streamlit-qrcode",
     }
+)
+st.title(
+    """
+    QRCode generated with [segno](https://pypi.org/project/segno/)
+    """
 )
 
 # st.write("""
