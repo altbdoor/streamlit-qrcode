@@ -68,7 +68,7 @@ def convert_qr(input_str: str, output_format: str, scale: int):
         return image
 
     elif output_format == "SVG":
-        return qrcode.svg_inline(border=0, scale=scale)
+        return qrcode.svg_inline(border=0, scale=scale, light="#fff")
 
 
 def handle_convert_qr():
@@ -101,6 +101,7 @@ with form_container:
         key="input",
         value="https://example.com",
         on_change=handle_convert_qr,
+        max_chars=500,
     )
     st.slider(
         "Scale (does not work with text output)",
