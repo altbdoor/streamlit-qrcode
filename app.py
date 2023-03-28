@@ -107,7 +107,7 @@ def handle_convert_qr():
             st.code(output_data, language=None)
 
         elif output_format == "PNG":
-            st.image(output_data)
+            st.image(output_data, output_format="PNG")
             st.download_button(
                 "Download PNG", output_data, "qr.png", key="download_png"
             )
