@@ -4,14 +4,10 @@ import io
 
 
 st.set_page_config(
+    page_title="Streamlit QRCode",
     menu_items={
         "About": "https://github.com/altbdoor/streamlit-qrcode",
-    }
-)
-st.title(
-    """
-    QRCode generated with [segno](https://pypi.org/project/segno/)
-    """
+    },
 )
 
 # st.write("""
@@ -19,23 +15,19 @@ st.title(
 # </style>
 # """, unsafe_allow_html=True)
 
-form_container = st.container()
-output_container = st.container()
-output_container.markdown("---")
 
-
-@st.cache_data
+@st.cache_data(ttl=3600)
 def convert_qr(
-    input_str: str,
-    output_format: str,
+    text: str,
+    format: str,
     scale: int,
     border: int,
     dark_color: str,
     light_color: str,
 ):
-    qrcode = segno.make_qr(input_str)
+    qrcode = segno.make_qr(text)
 
-    if output_format == "Text":
+    if format == "Text":
         qr_lines: list[str] = []
 
         with io.StringIO() as qr_text:
@@ -69,7 +61,7 @@ def convert_qr(
 
         return qr_remapped
 
-    elif output_format == "PNG":
+    elif format == "PNG":
         image = io.BytesIO()
         qrcode.save(
             image,
@@ -81,96 +73,90 @@ def convert_qr(
         )
         return image
 
-    elif output_format == "SVG":
+    elif format == "SVG":
         return qrcode.svg_inline(
             border=border, scale=scale, dark=dark_color, light=light_color
         )
 
 
-def handle_convert_qr():
-    input_str: str = st.session_state.input
-    output_format: str = st.session_state.format
-    scale: int = st.session_state.get("scale", 2)
-    border: int = st.session_state.get("border", 4)
-    dark_color: str = st.session_state.get("dark_color", "#000000")
-    light_color: str = st.session_state.get("light_color", "#ffffff")
+# ========================================
 
-    with output_container:
-        if not input_str:
-            st.info("Please write some text to encode into QR")
-            return
+st.markdown(
+    """
+# QRCode generated with segno
 
-        output_data = convert_qr(
-            input_str, output_format, scale, border, dark_color, light_color
-        )
-        if output_format == "Text":
-            st.code(output_data, language=None)
+[GitHub](https://github.com/altbdoor/streamlit-qrcode) |
+[segno](https://pypi.org/project/segno/)
+    """
+)
 
-        elif output_format == "PNG":
-            st.image(output_data, output_format="PNG")
-            st.download_button(
-                "Download PNG", output_data, "qr.png", key="download_png"
-            )
+text = st.text_area(
+    "Input text",
+    key="text",
+    value="https://example.com",
+    max_chars=500,
+)
 
-        elif output_format == "SVG":
-            st.image(output_data)
-            st.code(output_data, language="svg")
-            st.download_button(
-                "Download SVG", output_data, "qr.svg", key="download_svg"
-            )
+format = st.radio(
+    "Render output",
+    options=(
+        "PNG",
+        "SVG",
+        "Text",
+    ),
+    key="format",
+    index=0,
+)
 
-
-with form_container:
-    st.text_area(
-        "Input text",
-        key="input",
-        value="https://example.com",
-        on_change=handle_convert_qr,
-        max_chars=500,
+if format != "Text":
+    st.slider(
+        "Scale",
+        min_value=1,
+        max_value=100,
+        value=4,
+        key="scale",
     )
 
-    input_format = st.radio(
-        "Render output",
-        options=(
-            "PNG",
-            "SVG",
-            "Text",
-        ),
-        key="format",
-        index=0,
-        on_change=handle_convert_qr,
+    st.slider(
+        "Border",
+        min_value=0,
+        max_value=10,
+        value=4,
+        key="border",
     )
 
-    if input_format != "Text":
-        st.slider(
-            "Scale",
-            min_value=1,
-            max_value=100,
-            value=4,
-            key="scale",
-            on_change=handle_convert_qr,
-        )
-
-        st.slider(
-            "Border",
-            min_value=0,
-            max_value=10,
-            value=4,
-            key="border",
-            on_change=handle_convert_qr,
-        )
-
-        col1, col2 = st.columns(2)
-        col1.color_picker(
-            "Dark color", value="#000000", key="dark_color", on_change=handle_convert_qr
-        )
-        col2.color_picker(
-            "Light color",
-            value="#ffffff",
-            key="light_color",
-            on_change=handle_convert_qr,
-        )
-
-    st.button(
-        "Render", on_click=handle_convert_qr, use_container_width=True, key="render"
+    col1, col2 = st.columns(2)
+    col1.color_picker(
+        "Dark color",
+        value="#000000",
+        key="dark_color",
     )
+    col2.color_picker(
+        "Light color",
+        value="#ffffff",
+        key="light_color",
+    )
+
+st.markdown("---")
+
+scale: int = st.session_state.get("scale", 2)
+border: int = st.session_state.get("border", 4)
+dark_color: str = st.session_state.get("dark_color", "#000000")
+light_color: str = st.session_state.get("light_color", "#ffffff")
+
+if not text:
+    st.info("Please write some text to encode into QR")
+
+else:
+    output_data = convert_qr(text, format, scale, border, dark_color, light_color)
+    if format == "Text":
+        st.code(output_data, language=None)
+
+    elif format == "PNG":
+        st.image(output_data, output_format="PNG")
+        st.download_button("Download PNG", output_data, "qr.png", key="download_png")
+
+    elif format == "SVG":
+        st.image(output_data)
+        st.code(output_data, language="svg")
+        st.download_button("Download SVG", output_data, "qr.svg", key="download_svg")
